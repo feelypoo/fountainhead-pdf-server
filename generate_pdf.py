@@ -198,7 +198,7 @@ def draw_wine_btg(c, wine, y):
     c.drawString(TAB_PROD + g_w, y2, loc)
     text_end = TAB_PROD + g_w + sw(c, loc, "CourierNew", SZ_BODY)
 
-    def fmt(p): return str(p) if str(p).startswith("$") else f"${int(p)}"
+    def fmt(p): return str(p) if str(p).startswith("$") else (f"${int(float(p))}" if p else "")
     price_str = f"{fmt(btg_p)}/{fmt(btl_p)}" if btg_p else fmt(btl_p)
     p_w = sw(c, price_str, "CourierNew", SZ_BODY)
     c.setFont("CourierNew", SZ_BODY)
@@ -241,7 +241,7 @@ def draw_wine_btb(c, wine, y):
     c.drawString(TAB_PROD + g_w, y2, loc)
     text_end = TAB_PROD + g_w + sw(c, loc, "CourierNew", SZ_BODY)
 
-    price_str = str(btl_p) if str(btl_p).startswith("$") else f"${int(btl_p)}"
+    price_str = str(btl_p) if str(btl_p).startswith("$") else (f"${int(float(btl_p))}" if btl_p else "")
     p_w = sw(c, price_str, "CourierNew", SZ_BODY)
     c.drawString(TAB_PRICE - p_w, y2, price_str)
     dot_fill(c, text_end, TAB_PRICE - p_w, y2)
