@@ -43,9 +43,15 @@ class Section(BaseModel):
     wines: list
 
 
+class FixedSection(BaseModel):
+    heading: str
+    items: list
+
+
 class MenuData(BaseModel):
     btg_sections: list[Section] = []
     btb_sections: list[Section] = []
+    fixed_sections: Optional[list[FixedSection]] = None
 
 
 @app.get("/health")

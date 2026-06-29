@@ -77,7 +77,8 @@ BTB_P2_TOP   = PAGE_H - MARGIN   # 1156.55
 BTB_P2_BOTTOM = MARGIN           # 34.00
 
 
-# ── fixed BTG sections (Vermouth / Digestif / Non Alc) ────────────────────
+# ── fixed BTG sections (Vermouth / Digestif / Non Alc) — default copy, ──────
+# ── overridable per-request via data["fixed_sections"] ──────────────────────
 FIXED_BTG_SECTIONS = [
     {
         "heading": "Vermouth",
@@ -105,6 +106,26 @@ FIXED_BTG_SECTIONS = [
         ],
     },
 ]
+
+
+def _normalize_fixed_sections(raw):
+    """
+    Accepts either the default tuple-based format, or client-supplied
+    sections of {"heading": str, "items": [{"name": str, "desc": str, "price": str}, ...]}.
+    Returns the tuple-based format draw_fixed_item expects.
+    """
+    if not raw:
+        return FIXED_BTG_SECTIONS
+    normalized = []
+    for section in raw:
+        items = []
+        for item in section.get("items", []):
+            if isinstance(item, (list, tuple)):
+                items.append(tuple(item))
+            else:
+                items.append((item.get("name", ""), item.get("desc", ""), item.get("price", "")))
+        normalized.append({"heading": section.get("heading", ""), "items": items})
+    return normalized
 
 
 # ── drawing helpers ────────────────────────────────────────────────────────
@@ -179,7 +200,7 @@ def draw_wine_btg(c, wine, y):
     btl_p    = wine.get("btl_price")
 
     # line 1
-    vint_str = f"`{vintage}" if vintage and vintage.upper() != "NV" else (vintage or "")
+    vint_str = (vintage if vintage.startswith("`") else f"`{vintage}") if vintage and vintage.upper() != "NV" else (vintage or "")
     c.setFont("CourierNew", SZ_BODY)
     c.drawRightString(TAB_VINT, y, vint_str)
     c.drawString(TAB_PROD, y, producer + " ")
@@ -219,7 +240,7 @@ def draw_wine_btb(c, wine, y):
     btl_p    = wine.get("btl_price")
     note     = wine.get("note", "")
 
-    vint_str = f"`{vintage}" if vintage and vintage.upper() != "NV" else (vintage or "")
+    vint_str = (vintage if vintage.startswith("`") else f"`{vintage}") if vintage and vintage.upper() != "NV" else (vintage or "")
     c.setFont("CourierNew", SZ_BODY)
     c.drawRightString(TAB_VINT, y, vint_str)
     c.drawString(TAB_PROD, y, producer + " ")
@@ -307,7 +328,8 @@ def generate(data: dict) -> bytes:
             y = draw_wine_btg(c, wine, y)
 
     y -= (LEADING - SP_AFTER)  # extra <Br/> before Vermouth in IDML = 30pt gap
-    for section in FIXED_BTG_SECTIONS:
+    fixed_sections = _normalize_fixed_sections(data.get("fixed_sections"))
+    for section in fixed_sections:
         y = draw_category(c, section["heading"], y)
         for bold_name, italic_desc, price_str in section["items"]:
             y = draw_fixed_item(c, bold_name, italic_desc, price_str, y)
